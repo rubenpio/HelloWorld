@@ -10,8 +10,8 @@ pipeline {
     
         stage('Build') {
            steps {
-              echo 'Eyyy, esto es Python. No hay que compilar nada!!!'
-	          echo WORKSPACE
+              echo 'Holaaa '
+              echo WORKSPACE
               bat 'dir'
            }
         }
@@ -34,7 +34,7 @@ pipeline {
                     set FLASK_APP=app\\api.py
                     set FLASK_ENV=development
                     start flask run
-                    start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\Prueba\\helloworld\\test\\wiremock"
+                    start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
                     set PYTHONPATH=%WORKSPACE%
                     pytest --junitxml=result-rest.xml test\\rest
                 '''
