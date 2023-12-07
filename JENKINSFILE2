@@ -33,6 +33,7 @@ pipeline {
 
         stage('Tests') {
             agent { label 'python' } 
+            steps {
             parallel {
                 unitTest: {
                     steps {
@@ -66,6 +67,7 @@ pipeline {
                     }
                 }
             }
+}
         }
     }
 
