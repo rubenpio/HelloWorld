@@ -32,10 +32,9 @@ pipeline {
         }
 
         stage('Tests') {
-            
+           agent { label 'python' } 
             steps {
             parallel(
-agent { label 'python' }
             unitTest: {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
