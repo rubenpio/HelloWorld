@@ -35,7 +35,6 @@ pipeline {
             agent { laber 'python' }
             steps {
             parallel(
-            scripts {
             unitTest: {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
@@ -60,6 +59,7 @@ pipeline {
             }
         }
     )
+  scripts {
         stash includes: '**/*', name: 'code'
  }
 }
