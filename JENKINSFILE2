@@ -59,7 +59,7 @@ pipeline {
                                     '''
                                 }
                             }
-                                    stash includes: '**/*', name: 'code', allowEmpty: true
+                                    stash includes: '**/*', name: 'code'
                         )
                     }
                 
