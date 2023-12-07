@@ -3,7 +3,7 @@ pipeline {
 
     stages {
         stage('Get Code') {
-            agent { label 'agent1' }
+            agent { label 'windows' }
             steps {
                 script {
                     bat '''
@@ -11,14 +11,14 @@ pipeline {
                         hostname
                     '''
                     echo WORKSPACE
-                    git url: 'https://github.com/rubenpio/helloworld.git', branch: 'develop'
+                     git url: 'https://github.com/rubenpio/helloworld.git', branch: 'develop'
                     stash includes: '**/*', name: 'code', allowEmpty: true
                 }
             }
         }
 
         stage('Build') {
-            agent { label 'agent2' }
+            agent { label 'windows' }
             steps {
                 script {
                     echo WORKSPACE
@@ -32,38 +32,42 @@ pipeline {
         }
 
         stage('Tests') {
-            agent { label 'python' }
+            agent { label 'python' } 
             steps {
-                script {
-                    unstash 'code'
-                    
-                    def unitTest = catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                        bat '''
-                            set PYTHONPATH=%WORKSPACE%
-                            pytest --junitxml=result-unit.xml test\\unit
-                            whoami
-                            hostname
-                        '''
-                        echo WORKSPACE
+                    script {
+                        parallel (
+                            unitTest: {
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    bat '''
+                                        set PYTHONPATH=%WORKSPACE%
+                                        pytest --junitxml=result-unit.xml test\\unit
+                                        whoami
+                                        hostname
+                                    '''
+                                    echo WORKSPACE
+                                }
+                            },
+                            restTest: {
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    bat '''
+                                        set PYTHONPATH=%WORKSPACE%
+                                        set FLASK_APP=app\\api.py
+                                        set FLASK_ENV=development
+                                        start flask run
+                                        start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
+                                        pytest --junitxml=result-rest.xml test\\rest
+                                    '''
+                                }
+                            }
+                                    stash includes: '**/*', name: 'code'
+                        )
                     }
-
-                    def restTest = catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                        bat '''
-                            set PYTHONPATH=%WORKSPACE%
-                            set FLASK_APP=app\\api.py
-                            set FLASK_ENV=development
-                            start flask run
-                            start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
-                            pytest --junitxml=result-rest.xml test\\rest
-                        '''
-                    }
-                    stash includes: '**/*', name: 'code'
-                }
+                
             }
         }
 
         stage('Results') {
-            agent { label 'agent2' }
+            agent { label 'windows' }
             steps {
                 script {
                     unstash 'code'
@@ -72,8 +76,6 @@ pipeline {
                         whoami
                         hostname
                     '''
-                    echo WORKSPACE
-                    deleteDir()  // Esta línea borra el espacio de trabajo al final del pipeline
                 }
             }
         }
