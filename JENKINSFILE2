@@ -46,7 +46,7 @@ pipeline {
                         '''
                         echo WORKSPACE
                 }
-            },
+            }
             restTest: {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
