@@ -32,51 +32,53 @@ pipeline {
         }
 
         stage('Tests') {
-           agent { label 'python' } 
-            steps {
-            parallel (
-            script {
-            unitTest: {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    bat '''
-                        set PYTHONPATH=%WORKSPACE%
-                        pytest --junitxml=result-unit.xml test\\unit
-                        whoami
-                        hostname
-                        '''
-                        echo WORKSPACE
+            agent { label 'python' } 
+            parallel {
+                unitTest: {
+                    steps {
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            script {
+                                bat '''
+                                    set PYTHONPATH=%WORKSPACE%
+                                    pytest --junitxml=result-unit.xml test\\unit
+                                    whoami
+                                    hostname
+                                '''
+                                echo WORKSPACE
+                            }
+                        }
+                    }
                 }
-            }
-            restTest: {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    bat '''
-                        set PYTHONPATH=%WORKSPACE%
-                        set FLASK_APP=app\\api.py
-                        set FLASK_ENV=development
-                        start flask run
-                        start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
-                        pytest --junitxml=result-rest.xml test\\rest
-                    '''
+                restTest: {
+                    steps {
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            script {
+                                bat '''
+                                    set PYTHONPATH=%WORKSPACE%
+                                    set FLASK_APP=app\\api.py
+                                    set FLASK_ENV=development
+                                    start flask run
+                                    start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
+                                    pytest --junitxml=result-rest.xml test\\rest
+                                '''
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-    )
-}
-}
 
-        stage('Results') {
-            agent { label 'windows' }
-            steps {
-                script {
-                    unstash 'code'
-                    junit 'result*.xml'
-                    bat '''
-                        whoami
-                        hostname
-                    '''
-                    echo WORKSPACE
-                    deleteDir()  // Esta línea borra el espacio de trabajo al final del pipeline
-                }
+    stage('Results') {
+        agent { label 'windows' }
+        steps {
+            script {
+                unstash 'code'
+                junit 'result*.xml'
+                bat '''
+                    whoami
+                    hostname
+                '''
             }
         }
     }
