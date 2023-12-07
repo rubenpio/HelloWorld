@@ -32,7 +32,7 @@ pipeline {
         }
 
         stage('Tests') {
-            agent { label 'python' } 
+            agent { label 'java' } 
             steps {
                     script {
                         parallel (
