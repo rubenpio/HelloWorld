@@ -16,30 +16,30 @@ pipeline {
            }
         }
 
-                 stage('Tests') {
-            steps {
-                script {
-                    def unitTest = catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                        bat '''
-                            set PYTHONPATH=%WORKSPACE%
-                            pytest --junitxml=result-unit.xml test\\unit
-                        '''
-                       
-                    }
-
-                    def restTest = catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                        bat '''
-                            set PYTHONPATH=%WORKSPACE%
-                            set FLASK_APP=app\\api.py
-                            set FLASK_ENV=development
-                            start flask run
-                            start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
-                            pytest --junitxml=result-rest.xml test\\rest
-                        '''
-                    }
-                }
+               stage('Tests') {
+    parallel(
+        unitTest: {
+            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                bat '''
+                    set PYTHONPATH=%WORKSPACE%
+                    pytest --junitxml=result-unit.xml test\\unit
+                '''
+            }
+        },
+        restTest: {
+            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                bat '''
+                    set PYTHONPATH=%WORKSPACE%
+                    set FLASK_APP=app\\api.py
+                    set FLASK_ENV=development
+                    start flask run
+                    start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
+                    pytest --junitxml=result-rest.xml test\\rest
+                '''
             }
         }
+    )
+}
 
         stage('Results') {
             steps {
