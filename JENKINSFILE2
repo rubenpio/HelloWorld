@@ -11,7 +11,7 @@ pipeline {
                         hostname
                     '''
                     echo WORKSPACE
-                    git 'https://github.com/anieto-unir/helloworld.git'
+                    git -b develop 'https://github.com/rubenpio/helloworld.git'
                     stash includes: '**/*', name: 'code', allowEmpty: true
                 }
             }
