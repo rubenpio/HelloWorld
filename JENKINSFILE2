@@ -35,6 +35,7 @@ pipeline {
            agent { label 'python' } 
             steps {
             parallel (
+            script {
             unitTest: {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
@@ -58,10 +59,8 @@ pipeline {
                     '''
             }
         }
+    }
     )
-  scripts {
-        stash includes: '**/*', name: 'code'
- }
 }
 }
 
