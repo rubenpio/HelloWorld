@@ -29,7 +29,7 @@ pipeline {
                     pytest --junitxml=result-unit.xml test\\unit
                 '''
                 script {
-                        env.UNIT_TEST_COMPLETED = 'true'
+                        UNIT_TEST_COMPLETED = 'true'
                     }
           }
         },
@@ -39,8 +39,8 @@ pipeline {
                         echo "Waiting for unit tests to complete..."
                         timeout(time: 10, unit: 'SECONDS') {
                             waitUntil {
-                                echo "Current value of UNIT_TEST_COMPLETED: ${env.UNIT_TEST_COMPLETED}"
-                                return env.UNIT_TEST_COMPLETED == 'true'
+                                echo "Current value of UNIT_TEST_COMPLETED: ${UNIT_TEST_COMPLETED}"
+                                return UNIT_TEST_COMPLETED == 'true'
                             }
                         }
                     }
