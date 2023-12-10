@@ -1,5 +1,8 @@
 pipeline {
     agent any
+ environment {
+        UNIT_TEST_COMPLETED = 'false'
+    }
 
      stages {
         stage('Get Code') {
