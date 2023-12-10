@@ -26,14 +26,14 @@ pipeline {
                     pytest --junitxml=result-unit.xml test\\unit
                 '''
                 script {
-                    UNIT_TEST_COMPLETED = 'true'
+                    env.UNIT_TEST_COMPLETED = 'true'
             }
           }
         },
         restTest: {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 waitUntil {
-                    return UNIT_TEST_COMPLETED == 'true'
+                    return env.UNIT_TEST_COMPLETED == 'true'
                 }
                 bat '''
                     set PYTHONPATH=%WORKSPACE%
