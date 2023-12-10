@@ -36,10 +36,11 @@ pipeline {
         restTest: {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 script {
-                    
-                    waitUntil {
-                        return env.UNIT_TEST_COMPLETED == 'true'
-                    }
+                   when {
+                expression {
+                    return env.UNIT_TEST_COMPLETED == 'true'
+                }
+            }
                 }
                 bat '''
                     set PYTHONPATH=%WORKSPACE%
