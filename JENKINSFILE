@@ -36,6 +36,8 @@ pipeline {
         restTest: {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 script {
+echo "Waiting for unit tests to complete..."
+                                echo "Current value of UNIT_TEST_COMPLETED: ${env.UNIT_TEST_COMPLETED}"
                    when {
                 expression {
                     return env.UNIT_TEST_COMPLETED == 'true'
