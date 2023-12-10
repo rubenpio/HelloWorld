@@ -28,6 +28,7 @@ pipeline {
                 script {
                     UNIT_TEST_COMPLETED = 'true'
             }
+          }
         },
         restTest: {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
