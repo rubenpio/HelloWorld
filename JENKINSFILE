@@ -38,7 +38,9 @@ pipeline {
                 waitUntil {
                                 echo "Waiting for unit tests to complete..."
                                 echo "Current value of UNIT_TEST_COMPLETED: ${env.UNIT_TEST_COMPLETED}"
+                            script {
                                 return env.UNIT_TEST_COMPLETED == 'true'
+                            }
                             }
                 }
                 bat '''
