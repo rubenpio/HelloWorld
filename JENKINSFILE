@@ -36,7 +36,7 @@ pipeline {
         restTest: {
             catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                 script {
-                    milestone(1)
+                    
                     waitUntil {
                         return env.UNIT_TEST_COMPLETED == 'true'
                     }
