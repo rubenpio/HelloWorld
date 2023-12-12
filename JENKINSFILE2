@@ -38,7 +38,7 @@ pipeline {
                         parallel (
                             unitTest: {
                                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                    unstash 'code'
+                                    unstash 'code' // esta linea no estaba en la ejecución, pero en la clase de hoy me he dado cuenta, la añado para dejarlo bien 
                                     bat '''
                                         set PYTHONPATH=%WORKSPACE%
                                         pytest --junitxml=result-unit.xml test\\unit
