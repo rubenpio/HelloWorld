@@ -49,8 +49,7 @@ pipeline {
         stage ('Cobertura') {
              steps {
                 bat '''
-                    coverage run --branch --source=app --omit=app\\_init_.py,app\\api.py -m pytest test\\unit 
-                    coverage xml
+                    coverage xml --include=.\\result-unit.xml
                     '''
                 cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,80,90', lineCoverageTargets: '100,85,95', failUnstable: false
             }
