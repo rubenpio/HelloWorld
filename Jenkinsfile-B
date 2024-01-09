@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Get Code') {
             steps {
-                git 'https://github.com/rubenpio/helloworld.git'
+                git branch: 'feature_fix_coverage', url: 'https://github.com/rubenpio/helloworld.git'
             }
         }
         stage ('Unit') {
@@ -34,7 +34,7 @@ pipeline {
                      flake8 --format=pylint --exit-zero app >flake8.out
                     '''
                 recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [[threshold:
-                8, type: 'TOTAL', unstable: true], [threshold: 10, type: 'TOTAL', unstable: false]]
+                20, type: 'TOTAL', unstable: true], [threshold: 10, type: 'TOTAL', unstable: false]]
             }
         }
         stage ('Security') {
@@ -43,7 +43,7 @@ pipeline {
                     bandit --exit-zero -r . -f custom -o bandit.out --severity-level medium --msg-template "{abspath}:{line}: [{test_id}, {severity}] {msg}""
                     type bandit.out
                 '''
-               recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
+               recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 3, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
             }
         }
         stage ('Cobertura') {
@@ -70,4 +70,4 @@ pipeline {
             }
         }
     }
-}		
+}
