@@ -19,7 +19,7 @@ pipeline {
                 }
             }
         }
-        stage ('Funcional tests') {
+        stage ('Tests') {
             parallel {
                 stage ('Unit') {
                     agent {
@@ -87,10 +87,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        stage ('Non-funcional test'){
-            parallel {
                 stage ('Static') {
                     agent {
                         label 'Python'
@@ -186,5 +182,5 @@ pipeline {
                 }
             }
         }
-    }
-}
+            }
+        }
