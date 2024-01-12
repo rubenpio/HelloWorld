@@ -1,0 +1,190 @@
+pipeline {
+    agent none
+    
+    stages {
+        stage('Get Code') {
+            agent {
+                label 'Windows'
+            }
+            steps {
+                script {
+                    git 'https://github.com/rubenpio/helloworld.git'
+                    stash includes: '**', name: 'code'
+                    cleanWs()
+                    echo WORKSPACE
+                    bat '''
+                        whoami
+                        hostname
+                        '''
+                }
+            }
+        }
+        stage ('Funcional tests') {
+            parallel {
+                stage ('Unit') {
+                    agent {
+                        label 'Python'
+                    }
+                    steps {
+                        script {
+                            unstash 'code'
+                        }
+                         bat '''
+                            set PYTHONPATH=%WORKSPACE%
+                            pytest --junitxml=result-unit.xml test\\unit
+                            whoami
+                            hostname
+                        '''
+                        echo WORKSPACE
+                        script {
+                            stash includes: 'result-unit.xml', name: 'unit'
+                            cleanWs()
+                        }
+                    }
+                }
+                stage ('Cobertura') {
+                    agent {
+                        label 'Python'
+                    }
+                     steps {
+                         script {
+                                    unstash 'code'
+                                }
+                        bat '''
+                            coverage run --branch --source=app --omit=app\\_init_.py,app\\api.py -m pytest test\\unit 
+                            coverage xml
+                            whoami
+                            hostname
+                            '''
+                            echo WORKSPACE
+                        script {
+                            stash includes: 'coverage.xml', name: 'coverage'
+                            cleanWs()
+                        }
+                    }
+                }
+                stage ('Rest') {
+                    agent {
+                        label 'Python'
+                    }
+                    steps {
+                        script {
+                            unstash 'code'
+                        }
+                         bat '''
+                            set PYTHONPATH=%WORKSPACE%
+                            set FLASK_APP=app\\api.py
+                            set FLASK_ENV=development
+                            start flask run
+                            start java -jar "D:\\Devops & Cloud\\wiremock-standalone-3.3.1.jar" --port 9090 --root-dir "D:\\Devops & Cloud\\helloworld\\test\\wiremock"
+                            pytest --junitxml=result-rest.xml test\\rest
+                            whoami
+                            hostname
+                        '''
+                        echo WORKSPACE
+                        script {
+                            stash includes: 'result-rest.xml', name: 'rest'
+                        }
+                    }
+                }
+            }
+        }
+        stage ('Non-funcional test'){
+            parallel {
+                stage ('Static') {
+                    agent {
+                        label 'Python'
+                    }
+                    steps {
+                        script {
+                                    unstash 'code'
+                                }
+                        bat '''
+                             flake8 --format=pylint --exit-zero app >flake8.out
+                             whoami
+                            hostname
+                            '''
+                        echo WORKSPACE
+                        script {
+                            stash includes: 'flake8.out', name: 'flake'
+                            cleanWs()
+                        }
+                    }
+                }
+                stage ('Security') {
+                    agent {
+                        label 'Python'
+                    }
+                    steps {
+                        script {
+                                    unstash 'code'
+                                }
+                        bat '''
+                            bandit --exit-zero -r . -f custom -o bandit.out --severity-level medium --msg-template "{abspath}:{line}: [{test_id}, {severity}] {msg}""
+                            type bandit.out
+                            whoami
+                            hostname
+                        '''
+                        echo WORKSPACE
+                        script {
+                            stash includes: 'bandit.out', name: 'bandit'
+                            cleanWs()
+                        }
+                       
+                    }
+                }
+                stage ('Performance') {
+                    agent {
+                        label 'Python'
+                    }
+                    steps {
+                        script {
+                                    unstash 'code'
+                                }
+                        bat '''
+                            set PYTHONPATH=%WORKSPACE%
+                            set FLASK_APP=app\\api.py
+                            set FLASK_ENV=development
+                            start flask run
+                            C:\\Users\\ruben\\Downloads\\apache-jmeter-5.6.2\\apache-jmeter-5.6.2\\bin\\jmeter -n -t test\\jmeter\\flask.jmx -f -l flask.jtl
+                            whoami
+                            hostname
+                            '''
+                        echo WORKSPACE
+                        script {
+                            stash includes: 'flask.jtl', name: 'performance'
+                        }
+                    }
+                }
+            }
+    }
+        stage ('Result') {
+            agent {
+                label 'Jenkins'
+            }
+            steps {
+                script {
+                    unstash 'flake'
+                    unstash 'bandit'
+                    unstash 'coverage'
+                    unstash 'performance'
+                    unstash 'unit'
+                    unstash 'rest'
+                }
+                bat '''
+                    whoami
+                    hostname
+                    '''
+                    echo WORKSPACE
+                    recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
+                    recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [[threshold:8, type: 'TOTAL', unstable: true], [threshold: 10, type: 'TOTAL', unstable: false]]
+                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,80,90', lineCoverageTargets: '100,85,95', failUnstable: false
+                    perfReport sourceDataFiles: 'flask.jtl'
+                    junit 'result*.xml'
+                script {
+                    cleanWs()
+                }
+            }
+        }
+    }
+}
